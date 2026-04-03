@@ -138,4 +138,14 @@ curl -s http://host.docker.internal:3333/health
 
 ## OpenClaw 集成说明
 
-更完整的调用顺序、踩坑说明见仓库内 **`host-chrome-control/SKILL.md`**（随代码维护；**不会**打进 `npm pack` 的默认包文件，clone 仓库即可见）。
+更完整的调用顺序、踩坑说明见仓库内 **`chrome-control-proxy/SKILL.md`**（随代码维护；**不会**打进 `npm pack` 的默认包文件，clone 仓库即可见）。
+
+### 通过 ClawHub 安装 Skill
+
+在 [ClawHub](https://clawhub.ai) 搜索 **`chrome-control-proxy`** 并一键安装，OpenClaw 即可加载该 Skill，获得完整的调用指南与最佳实践提示。
+
+也可直接通过 GitHub 仓库地址导入：
+
+1. 打开 [https://clawhub.ai/import](https://clawhub.ai/import)
+2. 填入仓库地址：`https://github.com/zhengxiangqi/chrome-control-proxy`
+3. 选择 `chrome-control-proxy/` 目录作为 Skill 来源，点击发布
