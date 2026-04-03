@@ -1,6 +1,6 @@
 {
   "name": "chrome-control-proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chrome CDP control proxy: HTTP API for browser lifecycle and Playwright automation",
   "main": "index.js",
   "bin": {
