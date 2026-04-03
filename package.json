@@ -1,0 +1,44 @@
+{
+  "name": "chrome-control-proxy",
+  "version": "1.0.0",
+  "description": "Chrome CDP control proxy: HTTP API for browser lifecycle and Playwright automation",
+  "main": "index.js",
+  "bin": {
+    "ccp": "./bin/ccp.js"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "ccp": "node bin/ccp.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chrome",
+    "cdp",
+    "playwright",
+    "proxy",
+    "browser-automation",
+    "devtools-protocol"
+  ],
+  "author": "xiangqi.zheng",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhengxiangqi/chrome-control-proxy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zhengxiangqi/chrome-control-proxy/issues"
+  },
+  "homepage": "https://github.com/zhengxiangqi/chrome-control-proxy#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "playwright": "^1.51.0"
+  }
+}
