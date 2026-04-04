@@ -13,6 +13,7 @@ const {
   enqueuePlaywright,
   getPageDomPayload,
   runPlaywrightUserScript,
+  runPlaywrightPipeline,
   packScriptReturnValue,
 } = require('./lib/playwright-controller');
 
@@ -131,7 +132,7 @@ app.post('/playwright/page-dom', async (req, res) => {
     const payload = await enqueuePlaywright(() =>
       getPageDomPayload({
         url: b.url,
-        waitUntil: b.waitUntil || 'load',
+        waitUntil: b.waitUntil || 'domcontentloaded',
         timeout: b.timeout ?? 30000,
         target: b.target || 'first',
         maxHtmlChars: b.maxHtmlChars,
@@ -144,6 +145,7 @@ app.post('/playwright/page-dom', async (req, res) => {
         includeAccessibility: Boolean(b.includeAccessibility),
         includePlaywrightSnapshot: Boolean(b.includePlaywrightSnapshot),
         maxPlaywrightTargets: b.maxPlaywrightTargets,
+        playwrightSnapshotMode: b.playwrightSnapshotMode,
       }),
     );
     res.json({
@@ -152,6 +154,77 @@ app.post('/playwright/page-dom', async (req, res) => {
       ...payload,
     });
   } catch (err) {
+    sendPlaywrightError(res, err);
+  }
+});
+
+app.post('/playwright/pipeline', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const hasScript = typeof b.script === 'string' && b.script !== '';
+    const hasBefore = Boolean(b.beforePageDom);
+    const hasAfter = Boolean(b.afterPageDom);
+    if (!hasScript && !hasBefore && !hasAfter) {
+      log.warn('http', 'POST /playwright/pipeline rejected: empty pipeline');
+      return res.status(400).json({
+        ok: false,
+        error: 'pipeline requires at least one of beforePageDom, script, afterPageDom',
+      });
+    }
+    log.info('http', 'POST /playwright/pipeline', {
+      hasScript,
+      hasBefore,
+      hasAfter,
+    });
+    const payload = await enqueuePlaywright(() =>
+      runPlaywrightPipeline({
+        url: b.url,
+        waitUntil: b.waitUntil || 'domcontentloaded',
+        timeout: b.timeout ?? 30000,
+        target: b.target || 'first',
+        script: hasScript ? String(b.script) : undefined,
+        scriptTimeout: b.scriptTimeout ?? PLAYWRIGHT_RUN_DEFAULT_MS,
+        beforePageDom: hasBefore
+          ? {
+              ...b.beforePageDom,
+              waitUntil: undefined,
+              url: undefined,
+              timeout: b.beforePageDom.timeout ?? b.timeout ?? 30000,
+              includeHtml: b.beforePageDom.includeHtml !== false,
+              includeInnerText: Boolean(b.beforePageDom.includeInnerText),
+              includeAccessibility: Boolean(b.beforePageDom.includeAccessibility),
+              includePlaywrightSnapshot: Boolean(b.beforePageDom.includePlaywrightSnapshot),
+            }
+          : null,
+        afterPageDom: hasAfter
+          ? {
+              ...b.afterPageDom,
+              waitUntil: undefined,
+              url: undefined,
+              timeout: b.afterPageDom.timeout ?? b.timeout ?? 30000,
+              includeHtml: b.afterPageDom.includeHtml !== false,
+              includeInnerText: Boolean(b.afterPageDom.includeInnerText),
+              includeAccessibility: Boolean(b.afterPageDom.includeAccessibility),
+              includePlaywrightSnapshot: Boolean(b.afterPageDom.includePlaywrightSnapshot),
+            }
+          : null,
+      }),
+    );
+    res.json({
+      ok: true,
+      step: 'pipeline',
+      ...payload,
+    });
+  } catch (err) {
+    if (err.code === 'BAD_SCRIPT' || err.code === 'SCRIPT_TOO_LARGE') {
+      log.warn('http', `playwright/pipeline client error ${err.code}`, err.message);
+      return res.status(400).json({
+        ok: false,
+        error: err.message,
+        code: err.code,
+        ...(err.currentUrl && { currentUrl: err.currentUrl }),
+      });
+    }
     sendPlaywrightError(res, err);
   }
 });

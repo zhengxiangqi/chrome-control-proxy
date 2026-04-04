@@ -1,6 +1,6 @@
 {
   "name": "chrome-control-proxy",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Chrome CDP control proxy: HTTP API for browser lifecycle and Playwright automation",
   "main": "index.js",
   "bin": {
@@ -17,6 +17,11 @@
   "scripts": {
     "start": "node index.js",
     "ccp": "node bin/ccp.js",
+    "release:patch": "node scripts/release-version.js patch",
+    "release:minor": "node scripts/release-version.js minor",
+    "release:major": "node scripts/release-version.js major",
+    "publish:npm": "npm publish",
+    "publish:clawhub": "node -e \"const url='https://clawhub.ai/import'; const repo='https://github.com/zhengxiangqi/chrome-control-proxy'; const dir='chrome-control-proxy/'; console.log('Open ClawHub import page: ' + url); console.log('Repository: ' + repo); console.log('Skill directory: ' + dir); const { spawn } = require('child_process'); const platform = process.platform; const cmd = platform === 'darwin' ? 'open' : platform === 'win32' ? 'cmd' : 'xdg-open'; const args = platform === 'win32' ? ['/c', 'start', '', url] : [url]; const child = spawn(cmd, args, { stdio: 'ignore', detached: true }); child.on('error', () => {}); child.unref();\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

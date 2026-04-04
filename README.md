@@ -26,6 +26,43 @@ ccp status   # 需先启动服务，否则显示 unreachable
 
 ---
 
+## 发布
+
+升级版本号：
+
+```bash
+npm run release:patch
+# 或
+npm run release:minor
+# 或
+npm run release:major
+```
+
+说明：
+
+- 会同步更新 `package.json` 与 `chrome-control-proxy/SKILL.md` 的版本号
+- 不会自动修改 `CHANGELOG.md`，升级后按实际改动手动补充
+
+发布到 npm：
+
+```bash
+npm run publish:npm
+```
+
+发布到 ClawHub：
+
+```bash
+npm run publish:clawhub
+```
+
+说明：
+
+- `publish:npm` 等价于执行 `npm publish`
+- `publish:clawhub` 会打开 [ClawHub 导入页](https://clawhub.ai/import)，并在终端输出仓库地址与 Skill 目录：`chrome-control-proxy/`
+- 发布 ClawHub Skill 时，仓库地址使用：`https://github.com/zhengxiangqi/chrome-control-proxy`
+
+---
+
 ## CLI：`ccp`
 
 管理 **HTTP 服务进程**（`node index.js`），不是替代 `curl` 调接口。
@@ -87,9 +124,10 @@ node index.js
 |------|------|------|
 | `/playwright/status` | GET | CDP 是否可连 |
 | `/playwright/page-dom` | POST | 页面快照：HTML / innerText / a11y / **Playwright 专用可交互列表** |
+| `/playwright/pipeline` | POST | 单次请求串联导航、前后快照与脚本执行 |
 | `/playwright/run` | POST | 在 VM 中执行用户脚本（注入 `page`、`context`、`browser`） |
 
-`POST /playwright/page-dom` 与 `POST /playwright/run` 在服务端 **串行排队**，避免多请求抢同一浏览器。
+`POST /playwright/page-dom`、`POST /playwright/pipeline` 与 `POST /playwright/run` 在服务端 **串行排队**，避免多请求抢同一浏览器。
 
 ---
 
@@ -113,10 +151,21 @@ curl -s http://host.docker.internal:3333/health
 
 ## `POST /playwright/page-dom` 要点
 
+- 默认 `waitUntil` 为 **`domcontentloaded`**，更适合页面分析；若必须等待完整资源再改成 `load` / `networkidle`。
 - **`includeHtml: false`**：不返回整页 HTML，利于降 token。
 - **`includePlaywrightSnapshot: true`**：返回 `playwright.targets[]`（含 **`suggestedLocator`**），便于生成脚本。
-- **`selector`**：只截取子树。
+- **`playwrightSnapshotMode: "compact"`**：只返回更精简的可交互信息，适合先给 OpenClaw 做定位分析。
+- **`selector`**：只截取子树，优先限制到主内容区或弹窗根节点。
 - **`includeInnerText` / `includeAccessibility`**：按需打开。
+
+---
+
+## `POST /playwright/pipeline` 要点
+
+- 用于一次请求内完成：**导航 -> 分析前快照 -> 执行脚本 -> 分析后快照**。
+- 适合“操作后还要再拿页面结构”的场景，减少额外 HTTP 往返。
+- 外层支持 `url` / `waitUntil` / `timeout` / `target`；快照部分用 `beforePageDom`、`afterPageDom` 传入，结构与 `page-dom` 参数基本一致。
+- 若只需要执行脚本，不必改成 `pipeline`，继续用 `/playwright/run` 即可。
 
 ---
 
